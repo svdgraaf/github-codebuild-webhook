@@ -1,0 +1,94 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: github-webhook
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+
+# you can overwrite defaults here
+  stage: dev
+  region: eu-west-1
+
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - codebuild:*
+      Resource: '*'
+
+  environment:
+    BUILD_PROJECT: webhook-test
+    GITHUB_USERNAME: svdgraaf
+    GITHUB_KEY: fe582d56190f7c2ad4510eb0b16de37832ab6840
+
+
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+#you can define service wide environment variables here
+# environment:
+#   BUILD_PROJECT: 'Aagje-test'
+#   GITHUB_KEY: fe582d56190f7c2ad4510eb0b16de37832ab6840
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+functions:
+  trigger:
+    handler: handler.trigger_build
+    events:
+      - http:
+          path: trigger
+          method: POST
+
+  check_status:
+    handler: handler.check_build_status
+    events:
+      - schedule: rate(1 minute)
+
+
+# you can add CloudFormation resource templates here
+#resources:
+#  Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"

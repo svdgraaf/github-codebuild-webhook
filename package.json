@@ -1,0 +1,15 @@
+{
+  "name": "github-codebuild-webhook",
+  "version": "0.0.1",
+  "dependencies": {
+    "aws-sdk": "^2.40.0",
+    "github": "^9.2.0"
+  },
+  "devDependencies": {
+    "serverless": "^1.10.2",
+  },
+  "license": "MIT",
+  "repository": {
+    "git": "https://github.com/svdgraaf/github-codebuild-webhook"
+  }
+}
