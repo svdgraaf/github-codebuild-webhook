@@ -33,9 +33,9 @@ provider:
       Resource: '*'
 
   environment:
-    BUILD_PROJECT: webhook-test
-    GITHUB_USERNAME: svdgraaf
-    GITHUB_KEY: fe582d56190f7c2ad4510eb0b16de37832ab6840
+    BUILD_PROJECT: ${env:BUILD_PROJECT}
+    GITHUB_USERNAME: ${env:GITHUB_USERNAME}
+    GITHUB_KEY: ${env:GITHUB_KEY}
 
 
 #  iamRoleStatements:
