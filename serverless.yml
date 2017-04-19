@@ -1,31 +1,15 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
-
 service: github-webhook
 
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+plugins:
+  - serverless-step-functions
 
 provider:
   name: aws
   runtime: nodejs6.10
-
-# you can overwrite defaults here
   stage: dev
   region: eu-west-1
 
-# you can add statements to the Lambda function's IAM Role here
+  # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -35,60 +19,50 @@ provider:
   environment:
     BUILD_PROJECT: ${env:BUILD_PROJECT}
     GITHUB_USERNAME: ${env:GITHUB_USERNAME}
-    GITHUB_KEY: ${env:GITHUB_KEY}
-
-
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-#you can define service wide environment variables here
-# environment:
-#   BUILD_PROJECT: 'Aagje-test'
-#   GITHUB_KEY: fe582d56190f7c2ad4510eb0b16de37832ab6840
-
-# you can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+    GITHUB_ACCESS_TOKEN: ${env:GITHUB_ACCESS_TOKEN}
 
 functions:
-  trigger:
-    handler: handler.trigger_build
-    events:
-      - http:
-          path: trigger
-          method: POST
+  start-build:
+    handler: handler.start_build
 
-  check_status:
+  check-build-status:
     handler: handler.check_build_status
-    events:
-      - schedule: rate(1 minute)
 
+  build-done:
+    handler: handler.build_done
 
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+stepFunctions:
+  stateMachines:
+    build-for-commit:
+      events:
+        - http:
+            path: trigger-build
+            method: POST
+      definition:
+        Comment: "Check for build status for the given build project, and mark it when done on GH"
+        StartAt: start_build
+        States:
+          start_build:
+            Type: Task
+            Resource: arn:aws:lambda:${opt:region}:${self:custom.accountId}:function:${self:service}-${opt:stage}-start-build
+            # End: true
+            Next: check_build_status
+          wait_a_bit:
+            Type: Wait
+            Seconds: 5
+            Next: check_build_status
+          check_build_status:
+            Type: Task
+            Resource: arn:aws:lambda:${opt:region}:${self:custom.accountId}:function:${self:service}-${opt:stage}-check-build-status
+            Next: check_build_status_outcome
+          check_build_status_outcome:
+            Type: Choice
+            Choices:
+            - Variable: "$.buildComplete"
+              BooleanEquals: true
+              Next: build_done
+            Default: wait_a_bit
+          build_done:
+            Type: Task
+            Resource: arn:aws:lambda:${opt:region}:${self:custom.accountId}:function:${self:service}-${opt:stage}-build-done
+            End: true
