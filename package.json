@@ -7,7 +7,9 @@
   },
   "devDependencies": {
     "serverless": "^1.10.2",
-    "serverless-step-functions": "^1.0.2"
+    "serverless-step-functions": "^1.0.2",
+    "serverless-parameters": "^0.0.3",
+    "serverless-pseudo-parameters": "^0.1.4"
   },
   "license": "MIT",
   "repository": {
