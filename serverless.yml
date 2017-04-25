@@ -2,6 +2,23 @@ service: github-webhook
 
 plugins:
   - serverless-step-functions
+  - serverless-parameters
+  - serverless-aws-pseudo-parameters
+
+custom:
+  parameters:
+    github_username:
+      Type: String
+      Default: ${env:GITHUB_USERNAME}
+      Description: Github username, this is the user which will be displayed
+    github_access_token:
+      Type: String
+      Default: ${env:GITHUB_ACCESS_TOKEN}
+      Description: Your generated github access token
+    codebuild_project:
+      Type: String
+      Default: ${env:BUILD_PROJECT}
+      Description: Name of the build project that should be triggered
 
 provider:
   name: aws
@@ -17,9 +34,12 @@ provider:
       Resource: '*'
 
   environment:
-    BUILD_PROJECT: ${env:BUILD_PROJECT}
-    GITHUB_USERNAME: ${env:GITHUB_USERNAME}
-    GITHUB_ACCESS_TOKEN: ${env:GITHUB_ACCESS_TOKEN}
+    BUILD_PROJECT:
+      Ref: codebuild_project
+    GITHUB_USERNAME:
+      Ref: github_username
+    GITHUB_ACCESS_TOKEN:
+      Ref: github_access_token
 
 functions:
   start-build:
@@ -44,8 +64,7 @@ stepFunctions:
         States:
           start_build:
             Type: Task
-            Resource: arn:aws:lambda:${opt:region}:${self:custom.accountId}:function:${self:service}-${opt:stage}-start-build
-            # End: true
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-start-build"
             Next: check_build_status
           wait_a_bit:
             Type: Wait
@@ -53,7 +72,7 @@ stepFunctions:
             Next: check_build_status
           check_build_status:
             Type: Task
-            Resource: arn:aws:lambda:${opt:region}:${self:custom.accountId}:function:${self:service}-${opt:stage}-check-build-status
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-build-status"
             Next: check_build_status_outcome
           check_build_status_outcome:
             Type: Choice
@@ -64,5 +83,5 @@ stepFunctions:
             Default: wait_a_bit
           build_done:
             Type: Task
-            Resource: arn:aws:lambda:${opt:region}:${self:custom.accountId}:function:${self:service}-${opt:stage}-build-done
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-build-done"
             End: true
