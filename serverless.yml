@@ -3,21 +3,21 @@ service: github-webhook
 plugins:
   - serverless-step-functions
   - serverless-parameters
-  - serverless-aws-pseudo-parameters
+  - serverless-pseudo-parameters
 
 custom:
   parameters:
-    github_username:
+    GithubUsername:
       Type: String
-      Default: ${env:GITHUB_USERNAME}
+#      Default: ${env:GITHUB_USERNAME}
       Description: Github username, this is the user which will be displayed
-    github_access_token:
+    GithubAccessToken:
       Type: String
-      Default: ${env:GITHUB_ACCESS_TOKEN}
+#      Default: ${env:GITHUB_ACCESS_TOKEN}
       Description: Your generated github access token
-    codebuild_project:
+    CodebuildProject:
       Type: String
-      Default: ${env:BUILD_PROJECT}
+#      Default: ${env:BUILD_PROJECT}
       Description: Name of the build project that should be triggered
 
 provider:
@@ -35,11 +35,11 @@ provider:
 
   environment:
     BUILD_PROJECT:
-      Ref: codebuild_project
+      Ref: CodebuildProject
     GITHUB_USERNAME:
-      Ref: github_username
+      Ref: GithubUsername
     GITHUB_ACCESS_TOKEN:
-      Ref: github_access_token
+      Ref: GithubAccessToken
 
 functions:
   start-build:
