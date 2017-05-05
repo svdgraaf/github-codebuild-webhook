@@ -9,15 +9,16 @@ custom:
   parameters:
     GithubUsername:
       Type: String
-#      Default: ${env:GITHUB_USERNAME}
+      Default: ${env:GITHUB_USERNAME}
       Description: Github username, this is the user which will be displayed
     GithubAccessToken:
       Type: String
-#      Default: ${env:GITHUB_ACCESS_TOKEN}
+      Default: ${env:GITHUB_ACCESS_TOKEN}
       Description: Your generated github access token
+      NoEcho: true
     CodebuildProject:
       Type: String
-#      Default: ${env:BUILD_PROJECT}
+      Default: ${env:BUILD_PROJECT}
       Description: Name of the build project that should be triggered
 
 provider:
@@ -50,6 +51,17 @@ functions:
 
   build-done:
     handler: handler.build_done
+
+resources:
+  Outputs:
+    TriggerEndpoint:
+      Value:
+        Fn::Join:
+          - ""
+          -
+            - https://
+            - Ref: "ApiGatewayRestApi"
+            - .execute-api.eu-west-1.amazonaws.com/${opt:stage}/trigger-build/
 
 stepFunctions:
   stateMachines:
