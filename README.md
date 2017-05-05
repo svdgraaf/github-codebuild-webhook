@@ -31,3 +31,4 @@ Example output
 Todo
 ----
 * Add (optional) junit parsing, so it can comment on files with (possible) issues.
+* Perhaps make build project dynamic through apigateway variable if possible

@@ -4,7 +4,7 @@ plugins:
   - serverless-step-functions
   - serverless-parameters
   - serverless-pseudo-parameters
-  - serverless-dynamic-resource-names
+  - serverless-make-portable-template
 
 custom:
   parameters:
@@ -77,7 +77,7 @@ stepFunctions:
         States:
           start_build:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-start-build"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-start-build-#{AWS::StackName}"
             Next: check_build_status
           wait_a_bit:
             Type: Wait
@@ -85,7 +85,7 @@ stepFunctions:
             Next: check_build_status
           check_build_status:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-build-status"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-build-status-#{AWS::StackName}"
             Next: check_build_status_outcome
           check_build_status_outcome:
             Type: Choice
@@ -96,5 +96,5 @@ stepFunctions:
             Default: wait_a_bit
           build_done:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-build-done"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-build-done-#{AWS::StackName}"
             End: true

@@ -6,8 +6,6 @@ var codebuild = new AWS.CodeBuild();
 var GitHubApi = require("github");
 var github = new GitHubApi();
 
-var AWSXRay = require('aws-xray-sdk');
-
 // setup github client
 github.authenticate({
     type: "basic",

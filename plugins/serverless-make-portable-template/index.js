@@ -25,6 +25,14 @@ class ServerlessDynamicResourceNames {
         delete resource['Properties']['LogGroupName']
         template['Resources'][name] = resource
       }
+
+      if(resource['Type'] == 'AWS::Lambda::Function') {
+        resource['Properties']['FunctionName'] = {
+          "Fn::Sub": resource['Properties']['FunctionName'] + "-${AWS::StackName}"
+        }
+        template['Resources'][name] = resource
+      }
+
     })
 
     this.serverless.cli.consoleLog('Made resource names dynamic');
