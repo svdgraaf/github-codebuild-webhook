@@ -1,0 +1,13 @@
+{
+  "name": "serverless-make-rolename-dynamic",
+  "version": "0.0.2",
+  "devDependencies": {},
+  "license": "MIT",
+  "repository": {
+    "git": "https://github.com/svdgraaf/serverless-make-rolename-dynamic"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "lodash": "^4.13.1"
+  }
+}

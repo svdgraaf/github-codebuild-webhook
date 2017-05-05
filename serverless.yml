@@ -4,6 +4,7 @@ plugins:
   - serverless-step-functions
   - serverless-parameters
   - serverless-pseudo-parameters
+  - serverless-make-rolename-dynamic
 
 custom:
   parameters:
@@ -61,7 +62,7 @@ resources:
           -
             - https://
             - Ref: "ApiGatewayRestApi"
-            - .execute-api.eu-west-1.amazonaws.com/${opt:stage}/trigger-build/
+            - .execute-api.eu-west-1.amazonaws.com/dev/trigger-build/
 
 stepFunctions:
   stateMachines:
