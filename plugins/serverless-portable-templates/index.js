@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const chalk = require('chalk');
 
 
 class ServerlessPortableTemplates {
@@ -26,6 +27,7 @@ class ServerlessPortableTemplates {
       if(resource['Type'] == 'AWS::Logs::LogGroup') {
         delete resource['Properties']['LogGroupName']
         template['Resources'][name] = resource
+        console.log('Portable templates: ' + chalk.yellow(name + ' removed LogGroupName'));
       }
 
       // replace the service name with the stack name so the functions will be unique
@@ -33,11 +35,10 @@ class ServerlessPortableTemplates {
       if(resource['Type'] == 'AWS::Lambda::Function') {
         resource['Properties']['FunctionName'] = resource['Properties']['FunctionName'].replace(serviceName, "#{AWS::StackName}")
         template['Resources'][name] = resource
+        console.log('Portable templates: ' + chalk.yellow(name + ' Added Pseudo Parameter for FunctionName'));
       }
 
     })
-
-    this.serverless.cli.consoleLog('Made template portable');
   }
 }
 
