@@ -16,13 +16,9 @@ Use the steps below to launch the stack directly into your AWS account. You can 
 
 	(or use `sls deploy`).
 
-4. Note the endpoint for the trigger in the Stack Output, eg: `https://[id].execute-api.eu-west-1.amazonaws.com/dev/trigger-build/`
-5. Add that endpoint as a webhook on your project repository: `https://github.com/[username]/[repo-name]/settings/hooks/new`
-
-   Be sure to to select __`Let me select individual events.`__ and then __`Pull request`__, so it's only triggered on PR updates. It will work if you forgot this step, it can possibly incur extra costs, because the lambda function will trigger each time.
-6. Create a Pull Request on your project, and see the magic be invoked 😎
-7. ...
-8. Profit!
+4. Create a Pull Request on your project, and see the magic be invoked 😎
+5. ...
+6. Profit!
 
 Architecture
 ------------

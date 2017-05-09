@@ -40,7 +40,6 @@ module.exports.resource = (event, context, callback) => {
     };
 
     if(event.RequestType == "Create") {
-      console.log('Create!');
       github.repos.createHook(data).then(function(data){
         sendResponse(event, context, "SUCCESS", {});
       }).catch(function(err){
