@@ -8,7 +8,7 @@ Installation
 ------------
 Use the steps below to launch the stack directly into your AWS account. You can setup as much stacks as you want, as the stack is currently connected to 1 CodeBuild project.
 
-1. First, we'll need to setup an [AWS CodeBuild](https://eu-west-1.console.aws.amazon.com/codebuild/home) project. Create a new project in the AWS console, and be sure to add a [`buildspec.yml`](http://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html) file to your project with some steps. Here's an [example](https://github.com/svdgraaf/webhook-test/blob/foobar/buildspec.yml).
+1. First, we'll need to setup an [AWS CodeBuild](https://eu-west-1.console.aws.amazon.com/codebuild/home) project. Create a new project in the AWS console, and be sure to add a [`buildspec.yml`](http://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html) file to your project with some steps. Here's an [example](https://github.com/svdgraaf/webhook-test/blob/master/buildspec.yml).
 2. Create a github api token in your account here, so that the stack is allowed to use your account: [https://github.com/settings/tokens/new](https://github.com/settings/tokens/new). You can ofcourse choose to setup a seperate account for this.
 3. Deploy the stack:
 
