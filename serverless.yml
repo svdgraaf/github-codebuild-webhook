@@ -64,7 +64,7 @@ resources:
           -
             - https://
             - Ref: "ApiGatewayRestApi"
-            - .execute-api.eu-west-1.amazonaws.com/dev/trigger-build/
+            - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
 
 stepFunctions:
   stateMachines:
