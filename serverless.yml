@@ -12,6 +12,10 @@ custom:
       Type: String
       Default: ${env:GITHUB_USERNAME}
       Description: Github username, this is the user which will be displayed
+    GithubRepository:
+      Type: String
+      Default: ${env:GITHUB_REPOSITORY}
+      Description: "Github repository url, eg: https://github.com/[username]/[repository]"
     GithubAccessToken:
       Type: String
       Default: ${env:GITHUB_ACCESS_TOKEN}
@@ -44,6 +48,8 @@ provider:
       Ref: GithubUsername
     GITHUB_ACCESS_TOKEN:
       Ref: GithubAccessToken
+    GITHUB_REPOSITORY:
+      Ref: GithubRepository
 
 functions:
   start-build:
@@ -55,7 +61,26 @@ functions:
   build-done:
     handler: handler.build_done
 
+  webhook-resource:
+    handler: webhook.resource
+
 resources:
+  Resources:
+    GithubWebhook:
+      Type: Custom::GithubWebhook
+      Properties:
+        ServiceToken:
+          Fn::GetAtt:
+            - WebhookDashresourceLambdaFunction
+            - Arn
+        Endpoint:
+          Fn::Join:
+            - ""
+            -
+              - https://
+              - Ref: "ApiGatewayRestApi"
+              - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+
   Outputs:
     TriggerEndpoint:
       Value:
@@ -79,7 +104,7 @@ stepFunctions:
         States:
           start_build:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-start-build-#{AWS::StackName}"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-start-build"
             Next: check_build_status
           wait_a_bit:
             Type: Wait
@@ -87,7 +112,7 @@ stepFunctions:
             Next: check_build_status
           check_build_status:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-build-status-#{AWS::StackName}"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-check-build-status"
             Next: check_build_status_outcome
           check_build_status_outcome:
             Type: Choice
@@ -98,5 +123,5 @@ stepFunctions:
             Default: wait_a_bit
           build_done:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-build-done-#{AWS::StackName}"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-build-done"
             End: true
