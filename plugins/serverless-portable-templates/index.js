@@ -3,16 +3,16 @@
 const _ = require('lodash');
 
 
-class ServerlessDynamicResourceNames {
+class ServerlessPortableTemplates {
   constructor(serverless, options) {
     this.serverless = serverless;
     this.options = options;
     this.hooks = {
-      'before:deploy:deploy': this.makeResourceNamesDynamic.bind(this),
+      'before:deploy:deploy': this.makePortableTemplate.bind(this),
     };
   }
 
-  makeResourceNamesDynamic() {
+  makePortableTemplate() {
     const template = this.serverless.service.provider.compiledCloudFormationTemplate;
 
     // remove the RoleName, so CloudFormation will generate one for us
@@ -32,11 +32,10 @@ class ServerlessDynamicResourceNames {
         }
         template['Resources'][name] = resource
       }
-
     })
 
-    this.serverless.cli.consoleLog('Made resource names dynamic');
+    this.serverless.cli.consoleLog('Made template portable');
   }
 }
 
-module.exports = ServerlessDynamicResourceNames;
+module.exports = ServerlessPortableTemplates;

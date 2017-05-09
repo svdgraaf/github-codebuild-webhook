@@ -8,7 +8,7 @@ Installation
 ------------
 1. Setup an [AWS CodeBuild](https://eu-west-1.console.aws.amazon.com/codebuild/home) project (and add a `.codebuild.yml` file to your project)
 2. Create a github api token here: [https://github.com/settings/tokens/new](https://github.com/settings/tokens/new)
-3. Deploy the stack by pressing this button: [![Launch Awesomeness](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=serverless-build-webhook&templateURL=https://s3-eu-west-1.amazonaws.com/github-webhook-dev-serverlessdeploymentbucket-5l4ryu7zj2v7/serverless/github-webhook/dev/1493103690826-2017-04-25T07%3A01%3A30.826Z/compiled-cloudformation-template.json)
+3. Deploy the stack by pressing this button: [![Launch Awesomeness](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=serverless-build-trigger&templateURL=https://s3-eu-west-1.amazonaws.com/github-webhook-artifacts-eu-west-1/serverless/github-webhook/trigger/1494319871068-2017-05-09T08%3A51%3A11.068Z/compiled-cloudformation-template.json)
    (or with `sls deploy`).
 4. Note the endpoint for the trigger in the Stack Output, eg: `https://[id].execute-api.eu-west-1.amazonaws.com/dev/trigger-build/`
 5. Add that endpoint as a webhook on your project repository: `https://github.com/[username]/[repo-name]/settings/hooks/new`

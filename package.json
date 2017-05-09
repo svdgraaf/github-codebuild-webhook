@@ -6,11 +6,11 @@
     "github": "^9.2.0"
   },
   "devDependencies": {
-    "serverless": "^1.10.2",
+    "serverless": "^1.12.1",
     "serverless-step-functions": "^1.0.2",
     "serverless-parameters": "^0.0.3",
     "serverless-pseudo-parameters": "^0.1.4",
-    "serverless-make-portable-template": "file:./plugins/serverless-make-portable-template"
+    "serverless-portable-templates": "file:./plugins/serverless-portable-templates"
   },
   "license": "MIT",
   "repository": {
