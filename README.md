@@ -33,7 +33,7 @@ If you would like to deploy this service with Serverless:
 
 ```shell
 export GITHUB_USERNAME=your_username
-export GITHUB_REPOSITORY=your_repository
+export GITHUB_REPOSITORY=https://github.com/owner/repository
 export GITHUB_ACCESS_TOKEN=your_access_token
 export BUILD_PROJECT=your_codebuild_application_name
 
