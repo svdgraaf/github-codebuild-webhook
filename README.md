@@ -4,27 +4,47 @@ Github CodeBuild Webhook
 This project will setup an api gateway endpoint, which you can have your github repository connect to. This will start and update a commit with the current build status.
 This will be triggered for any PR update, on any branch.
 
+Setup
+-----
+1. Setup an [AWS CodeBuild](https://console.aws.amazon.com/codebuild/home) project.
+2. Create a Github API token [here](https://github.com/settings/tokens/new). Make sure to grant "repo" and "admin:repo_hook" permissions.
+
 Installation
 ------------
 Use the steps below to launch the stack directly into your AWS account. You can setup as much stacks as you want, as the stack is currently connected to 1 CodeBuild project.
 
-1. First, we'll need to setup an [AWS CodeBuild](https://eu-west-1.console.aws.amazon.com/codebuild/home) project. Create a new project in the AWS console, and be sure to add a [`buildspec.yml`](http://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html) file to your project with some steps. Here's an [example](https://github.com/svdgraaf/webhook-test/blob/master/buildspec.yml).
-2. Create a github api token in your account here, so that the stack is allowed to use your account: [https://github.com/settings/tokens/new](https://github.com/settings/tokens/new). You can ofcourse choose to setup a seperate account for this.
-3. Deploy the stack:
+1. Deploy the stack:
 
    [![Launch Awesomeness](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=serverless-build-trigger&templateURL=https://s3-eu-west-1.amazonaws.com/github-webhook-artifacts-eu-west-1/serverless/github-webhook/trigger/1494331984949-2017-05-09T12%3A13%3A04.949Z/compiled-cloudformation-template.json)
 
 	(or use `sls deploy`).
 
-4. Create a Pull Request on your project, and see the magic be invoked 😎
-5. ...
-6. Profit!
+2. Create a Pull Request on your project, and see the magic be invoked 😎
+3. ...
+4. Profit!
+
+Deploying with Serverless
+--------------------------
+If you would like to deploy this service with Serverless:
+
+1. Clone this repository
+2. `npm install` dependencies
+3. Run `serverless deploy`
+
+```shell
+export GITHUB_USERNAME=your_username
+export GITHUB_REPOSITORY=https://github.com/owner/repository
+export GITHUB_ACCESS_TOKEN=your_access_token
+export BUILD_PROJECT=your_codebuild_application_name
+
+serverless deploy -v
+```
 
 Architecture
 ------------
 ![Flow](https://raw.githubusercontent.com/svdgraaf/github-codebuild-webhook/master/architecture.png)
 
-When you create a PR, a notification is send to the Api Gateway endpoint and the lambda step function is triggered. This will trigger the start of a build for your project, and set a status of `pending` on your specific commit. Then it will start checking your build status every X seconds. When the status of the build changes to `done` or `failed`, the github api is called and the PR status will be updated accordingly.
+When you create a PR, a notification is sent to the API Gateway endpoint and the lambda step function is triggered. This will trigger the start of a build for your project, and set a status of `pending` on your specific commit. Then it will start checking your build status every X seconds. When the status of the build changes to `done` or `failed`, the github api is called and the PR status will be updated accordingly.
 
 Example output
 --------------
