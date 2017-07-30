@@ -30,7 +30,6 @@ provider:
   name: aws
   runtime: nodejs6.10
   stage: trigger
-  region: eu-west-1
   versionFunctions: false
   deploymentBucket: github-webhook-artifacts-${self:provider.region}
 
@@ -79,7 +78,7 @@ resources:
             -
               - https://
               - Ref: "ApiGatewayRestApi"
-              - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+              - .execute-api.#{AWS::Region}.amazonaws.com/${self:provider.stage}/trigger-build/
 
   Outputs:
     TriggerEndpoint:
@@ -89,7 +88,7 @@ resources:
           -
             - https://
             - Ref: "ApiGatewayRestApi"
-            - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+            - .execute-api.#{AWS::Region}.amazonaws.com/${self:provider.stage}/trigger-build/
 
 stepFunctions:
   stateMachines:
