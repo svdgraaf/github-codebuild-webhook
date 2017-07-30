@@ -39,7 +39,7 @@ provider:
     - Effect: "Allow"
       Action:
         - codebuild:*
-      Resource: '*'
+      Resource: "arn:aws:codebuild:#{AWS::Region}:#{AWS::AccountId}:project/${env:BUILD_PROJECT}"
 
   environment:
     BUILD_PROJECT:
