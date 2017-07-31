@@ -112,6 +112,10 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-check-build-status"
             Next: check_build_status_outcome
+            Retry:
+              - ErrorEquals: [ "States.TaskFailed" ]
+                IntervalSeconds: 3
+                MaxAttempts: 3
           check_build_status_outcome:
             Type: Choice
             Choices:
