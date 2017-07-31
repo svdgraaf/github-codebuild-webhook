@@ -29,7 +29,7 @@ module.exports.start_build = (event, context, callback) => {
 
     var params = {
       projectName: process.env.BUILD_PROJECT,
-      sourceVersion: head.sha
+      sourceVersion: 'pr/' + event.pull_request.number
     };
 
     // start the codebuild process for this project
