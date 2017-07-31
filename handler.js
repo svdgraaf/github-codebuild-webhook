@@ -25,7 +25,8 @@ module.exports.start_build = (event, context, callback) => {
   if('pull_request' in event) {
 
     var head = event.pull_request.head;
-    var repo = head.repo;
+    var base = event.pull_request.base;
+    var repo = base.repo;
 
     var params = {
       projectName: process.env.BUILD_PROJECT,
