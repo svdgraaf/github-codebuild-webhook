@@ -5,6 +5,11 @@ var codebuild = new AWS.CodeBuild();
 
 var GitHubApi = require("github");
 var github = new GitHubApi();
+var BUILD_ACTIONS = [
+    "opened",
+    "reopened",
+    "synchronize"
+];
 
 // setup github client
 github.authenticate({
@@ -24,39 +29,44 @@ module.exports.start_build = (event, context, callback) => {
   // we only act on pull_request changes (can be any, but we don't need those)
   if('pull_request' in event) {
 
-    var head = event.pull_request.head;
-    var base = event.pull_request.base;
-    var repo = base.repo;
+    if(BUILD_ACTIONS.indexOf(event.action) >= 0) {
 
-    var params = {
-      projectName: process.env.BUILD_PROJECT,
-      sourceVersion: 'pr/' + event.pull_request.number
-    };
+      var head = event.pull_request.head;
+      var base = event.pull_request.base;
+      var repo = base.repo;
 
-    // start the codebuild process for this project
-    codebuild.startBuild(params, function(err, data) {
-      if (err) {
-        console.log(err, err.stack);
-        callback(err);
-      } else {
+      var params = {
+        projectName: process.env.BUILD_PROJECT,
+        sourceVersion: 'pr/' + event.pull_request.number
+      };
 
-        var build = data.build;
+      // start the codebuild process for this project
+      codebuild.startBuild(params, function(err, data) {
+        if (err) {
+          console.log(err, err.stack);
+          callback(err);
+        } else {
 
-        // all is well, mark the commit as being 'in progress'
-        github.repos.createStatus({
-          owner: repo.owner.login,
-          repo: repo.name,
-          sha: head.sha,
-          state: 'pending',
-          target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new',
-          context: 'CodeBuild',
-          description: 'Build is running...'
-        }).then(function(data){
-          console.log(data);
-        });
-        callback(null, build);
-      }
-    });
+          var build = data.build;
+
+          // all is well, mark the commit as being 'in progress'
+          github.repos.createStatus({
+            owner: repo.owner.login,
+            repo: repo.name,
+            sha: head.sha,
+            state: 'pending',
+            target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new',
+            context: 'CodeBuild',
+            description: 'Build is running...'
+          }).then(function(data){
+            console.log(data);
+          });
+          callback(null, build);
+        }
+      });
+    } else {
+      callback("Event is not a build action")
+    }
   } else {
     callback("Not a PR");
   }
