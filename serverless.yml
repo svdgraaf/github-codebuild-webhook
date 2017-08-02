@@ -31,6 +31,7 @@ provider:
   runtime: nodejs6.10
   stage: trigger
   versionFunctions: false
+  memorySize: 128
 
   # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
