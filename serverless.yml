@@ -103,7 +103,7 @@ stepFunctions:
         States:
           start_build:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-start-build"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-start-build"
             Next: check_build_status
           wait_a_bit:
             Type: Wait
@@ -111,7 +111,7 @@ stepFunctions:
             Next: check_build_status
           check_build_status:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-check-build-status"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-check-build-status"
             Next: check_build_status_outcome
             Retry:
               - ErrorEquals: [ "States.TaskFailed" ]
@@ -126,5 +126,5 @@ stepFunctions:
             Default: wait_a_bit
           build_done:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-build-done"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-build-done"
             End: true
