@@ -44,13 +44,30 @@ module.exports.start_build = (event, context, callback) => {
   // we only act on pull_request changes (can be any, but we don't need those)
   if('pull_request' in event) {
 
+    response.pull_request = event.pull_request
     var head = event.pull_request.head;
-    var repo = head.repo;
+    var repo = base.repo;
 
     var params = {
       projectName: process.env.BUILD_PROJECT,
       sourceVersion: 'pr/' + event.pull_request.number
     };
+
+    var status = {
+      owner: repo.owner.login,
+      repo: repo.name,
+      sha: head.sha,
+      state: 'pending',
+      context: githubContext,
+      description: 'Setting up the build...'
+    };
+
+    // check that we can set a status before starting the build
+    github.repos.createStatus(status).catch(function(err) {
+      console.log("Github authentication failed");
+      console.log(err, err.stack);
+      callback(err);
+    });
 
     // start the codebuild process for this project
     codebuild.startBuild(params, function(err, data) {
@@ -59,23 +76,18 @@ module.exports.start_build = (event, context, callback) => {
         callback(err);
       } else {
 
-        var build = data.build;
+        response.build = data.build;
 
         // all is well, mark the commit as being 'in progress'
-        github.repos.createStatus({
-          owner: repo.owner.login,
-          repo: repo.name,
-          sha: head.sha,
-          state: 'pending',
-          target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new',
-          context: 'CodeBuild',
-          description: 'Build is running...'
-        }).then(function(data){
+        status.description = 'Build is running...'
+        status.target_url = 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new'
+        github.repos.createStatus(status).then(function(data){
           console.log(data);
         });
-        callback(null, build);
+        callback(null, response);
       }
     });
+    }
   } else {
     callback("Not a PR");
   }
