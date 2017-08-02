@@ -2,15 +2,35 @@
 
 var AWS = require('aws-sdk');
 var codebuild = new AWS.CodeBuild();
+var ssm = new AWS.SSM();
 
 var GitHubApi = require("github");
 var github = new GitHubApi();
 
-// setup github client
-github.authenticate({
-    type: "basic",
-    username: process.env.GITHUB_USERNAME,
-    password: process.env.GITHUB_ACCESS_TOKEN
+var username_params = {
+  Name: process.env.SSM_GITHUB_USERNAME,
+  WithDecryption: true
+};
+
+var access_token_params = {
+  Name: process.env.SSM_GITHUB_ACCESS_TOKEN,
+  WithDecryption: true
+};
+
+ssm.getParameter(username_params, function(err, github_username) {
+  if (err) console.log(err, err.stack); // an error occurred
+  else {
+    ssm.getParameter(access_token_params, function(err, github_access_token) {
+      if (err) console.log(err, err.stack); // an error occurred
+      else {
+        github.authenticate({
+            type: "basic",
+            username: github_username.Parameter.Value,
+            password: github_access_token.Parameter.Value
+        });
+      }
+    });
+  }
 });
 
 // get the region where this lambda is running
