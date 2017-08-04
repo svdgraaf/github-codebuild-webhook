@@ -7,31 +7,16 @@ var ssm = new AWS.SSM();
 var GitHubApi = require("github");
 var github = new GitHubApi();
 
-var username_params = {
-  Name: process.env.SSM_GITHUB_USERNAME,
-  WithDecryption: true
-};
-
-var access_token_params = {
-  Name: process.env.SSM_GITHUB_ACCESS_TOKEN,
-  WithDecryption: true
-};
-
-ssm.getParameter(username_params, function(err, github_username) {
-  if (err) console.log(err, err.stack); // an error occurred
-  else {
-    ssm.getParameter(access_token_params, function(err, github_access_token) {
-      if (err) console.log(err, err.stack); // an error occurred
-      else {
-        github.authenticate({
-            type: "basic",
-            username: github_username.Parameter.Value,
-            password: github_access_token.Parameter.Value
-        });
-      }
-    });
+var ssmParams = {
+  username: {
+    Name: process.env.SSM_GITHUB_USERNAME,
+    WithDecryption: true
+  },
+  accessToken: {
+    Name: process.env.SSM_GITHUB_ACCESS_TOKEN,
+    WithDecryption: true
   }
-});
+};
 
 // get the region where this lambda is running
 var region = process.env.AWS_DEFAULT_REGION;
@@ -62,32 +47,41 @@ module.exports.start_build = (event, context, callback) => {
       description: 'Setting up the build...'
     };
 
-    // check that we can set a status before starting the build
-    github.repos.createStatus(status).catch(function(err) {
-      console.log("Github authentication failed");
-      console.log(err, err.stack);
-      callback(err);
-    });
-
-    // start the codebuild process for this project
-    codebuild.startBuild(params, function(err, data) {
+    setGithubAuth(github, ssm, ssmParams, function (err) {
       if (err) {
-        console.log(err, err.stack);
+        console.log(err);
         callback(err);
       } else {
+        // check that we can set a status before starting the build
+        github.repos.createStatus(status).then(function() {
+          // start the codebuild  project
+          codebuild.startBuild(params, function(err, data) {
+            if (err) {
+              console.log(err, err.stack);
+              callback(err);
+            } else {
+              // store the build data in the response
+              response.build = data.build;
 
-        response.build = data.build;
-
-        // all is well, mark the commit as being 'in progress'
-        status.description = 'Build is running...'
-        status.target_url = 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new'
-        github.repos.createStatus(status).then(function(data){
-          console.log(data);
+              // all is well, mark the commit as being 'in progress'
+              status.description = 'Build is running...'
+              status.target_url = 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new'
+              github.repos.createStatus(status).then(function(data){
+                // success
+                callback(null, response);
+              }).catch(function(err) {
+                console.log(err);
+                callback(err);
+              });
+            }
+          });
+        }).catch(function(err) {
+          console.log("Github authentication failed");
+          console.log(err, err.stack);
+          callback(err);
         });
-        callback(null, response);
       }
     });
-    }
   } else {
     callback("Not a PR");
   }
@@ -134,16 +128,56 @@ module.exports.build_done = (event, context, callback) => {
   }
   console.log('Github state will be', state);
 
-  github.repos.createStatus({
-    owner: username,
-    repo: repo,
-    sha: event.sourceVersion,
-    state: state,
-    target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + event.id + '/view/new',
-    context: 'CodeBuild',
-    description: 'Build ' + event.buildStatus + '...'
-  }).catch(function(err){
-    console.log(err);
-    context.fail(data);
+  setGithubAuth(github, ssm, ssmParams, function (err) {
+    if (err) {
+      console.log(err);
+      callback(err);
+    } else {
+      github.repos.createStatus({
+        owner: repo.owner.login,
+        repo: repo.name,
+        sha: head.sha,
+        state: state,
+        target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + event.build.id + '/view/new',
+        context: githubContext,
+        description: 'Build ' + buildStatus + '...'
+      }).catch(function(err){
+        console.log(err);
+        context.fail(data);
+      });
+    }
   });
+}
+
+function setGithubAuth(github, ssm, params, callback) {
+
+  if (github.hasOwnProperty("auth")) {
+    console.log("Github auth object already set");
+    callback();
+  } else {
+    console.log("Setting up the Github auth object");
+
+    var cred = {
+      type: "basic"
+    };
+
+    ssm.getParameter(params.username, function (err, data) {
+      if (err) callback(err);
+      else {
+        cred.username = data.Parameter.Value;
+        ssm.getParameter(params.accessToken, function (err, data) {
+          if (err) callback(err);
+          else {
+            cred.password = data.Parameter.Value;
+            try {
+              github.authenticate(cred);
+            } catch (err) {
+              callback(err);
+            }
+            callback();
+          }
+        });
+      }
+    });
+  }
 }
