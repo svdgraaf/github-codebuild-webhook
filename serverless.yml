@@ -7,6 +7,7 @@ plugins:
   - serverless-pseudo-parameters
 
 custom:
+  githubStatusContext: codebuild-ci/pr
   parameters:
     GithubUsername:
       Type: String
@@ -21,6 +22,10 @@ custom:
       Default: ${env:GITHUB_ACCESS_TOKEN}
       Description: Your generated github access token
       NoEcho: true
+    GithubStatusContext:
+      Type: String
+      Default: ${env:GITHUB_STATUS_CONTEXT, self:custom.githubStatusContext}
+      Description: A label used to differentiate this status from other status integrations
     CodebuildProject:
       Type: String
       Default: ${env:BUILD_PROJECT}
@@ -49,6 +54,8 @@ provider:
       Ref: GithubAccessToken
     GITHUB_REPOSITORY:
       Ref: GithubRepository
+    GITHUB_STATUS_CONTEXT:
+      Ref: GithubStatusContext
 
 functions:
   start-build:

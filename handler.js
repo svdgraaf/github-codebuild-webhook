@@ -21,6 +21,9 @@ github.authenticate({
 // get the region where this lambda is running
 var region = process.env.AWS_DEFAULT_REGION;
 
+// get the github status context
+var githubContext = process.env.GITHUB_STATUS_CONTEXT;
+
 // this function will be triggered by the github webhook
 module.exports.start_build = (event, context, callback) => {
 
@@ -60,7 +63,7 @@ module.exports.start_build = (event, context, callback) => {
             sha: head.sha,
             state: 'pending',
             target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + data.build.id + '/view/new',
-            context: 'CodeBuild',
+            context: githubContext,
             description: 'Build is running...'
           }).then(function(data){
             console.log(data);
@@ -126,7 +129,7 @@ module.exports.build_done = (event, context, callback) => {
     sha: head.sha,
     state: state,
     target_url: 'https://' + region + '.console.aws.amazon.com/codebuild/home?region=' + region + '#/builds/' + event.build.id + '/view/new',
-    context: 'CodeBuild',
+    context: githubContext,
     description: 'Build ' + buildStatus + '...'
   }).catch(function(err){
     console.log(err);
