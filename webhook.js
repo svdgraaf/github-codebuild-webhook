@@ -48,17 +48,11 @@ module.exports.resource = (event, context, callback) => {
       });
 
     } else {
-      github.repos.editHook(data).then(function(data){
-        sendResponse(event, context, "SUCCESS", {});
-      }).catch(function(err){
-        console.log(err);
-        sendResponse(event, context, "FAILED", {});
-      });;
+      // TODO: support editing hooks by id
+      // https://mikedeboer.github.io/node-github/#api-repos-editHook
+      sendResponse(event, context, "SUCCESS", {});
     }
   }
-  // var responseStatus = "FAILED";
-  // var responseData = {};
-  // sendResponse(event, context, responseStatus, responseData);
 }
 
 // Send response to the pre-signed S3 URL
