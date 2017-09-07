@@ -30,7 +30,6 @@ provider:
   name: aws
   runtime: nodejs6.10
   stage: trigger
-  region: eu-west-1
   versionFunctions: false
   deploymentBucket: github-webhook-artifacts-${opt:region, self:provider.region}
 
