@@ -2,16 +2,21 @@
 
 var AWS = require('aws-sdk');
 var codebuild = new AWS.CodeBuild();
+var ssm = new AWS.SSM();
 
 var GitHubApi = require("github");
 var github = new GitHubApi();
 
-// setup github client
-github.authenticate({
-    type: "basic",
-    username: process.env.GITHUB_USERNAME,
-    password: process.env.GITHUB_ACCESS_TOKEN
-});
+var ssmParams = {
+  username: {
+    Name: process.env.SSM_GITHUB_USERNAME,
+    WithDecryption: true
+  },
+  accessToken: {
+    Name: process.env.SSM_GITHUB_ACCESS_TOKEN,
+    WithDecryption: true
+  }
+};
 
 // get the region where this lambda is running
 var region = process.env.AWS_DEFAULT_REGION;
@@ -39,22 +44,31 @@ module.exports.resource = (event, context, callback) => {
       }
     };
 
-    if(event.RequestType == "Create") {
-      github.repos.createHook(data).then(function(data){
-        sendResponse(event, context, "SUCCESS", {});
-      }).catch(function(err){
+    setGithubAuth(github, ssm, ssmParams, function (err) {
+      if (err) {
         console.log(err);
         sendResponse(event, context, "FAILED", {});
-      });
-
-    } else {
-      github.repos.editHook(data).then(function(data){
-        sendResponse(event, context, "SUCCESS", {});
-      }).catch(function(err){
-        console.log(err);
-        sendResponse(event, context, "FAILED", {});
-      });;
-    }
+        callback(err);
+      } else {
+        if(event.RequestType == "Create") {
+          github.repos.createHook(data).then(function(data){
+            sendResponse(event, context, "SUCCESS", {});
+          }).catch(function(err){
+            console.log(err);
+            sendResponse(event, context, "FAILED", {});
+            callback(err);
+          });
+        } else {
+          github.repos.editHook(data).then(function(data){
+            sendResponse(event, context, "SUCCESS", {});
+          }).catch(function(err){
+            console.log(err);
+            sendResponse(event, context, "FAILED", {});
+            callback(err);
+          });
+        }
+      }
+    });
   }
   // var responseStatus = "FAILED";
   // var responseData = {};
@@ -109,4 +123,37 @@ function sendResponse(event, context, responseStatus, responseData) {
     // write data to request body
     request.write(responseBody);
     request.end();
+}
+
+function setGithubAuth(github, ssm, params, callback) {
+
+  if (github.hasOwnProperty("auth")) {
+    console.log("Github auth object already set");
+    callback();
+  } else {
+    console.log("Setting up the Github auth object");
+
+    var cred = {
+      type: "basic"
+    };
+
+    ssm.getParameter(params.username, function (err, data) {
+      if (err) callback(err);
+      else {
+        cred.username = data.Parameter.Value;
+        ssm.getParameter(params.accessToken, function (err, data) {
+          if (err) callback(err);
+          else {
+            cred.password = data.Parameter.Value;
+            try {
+              github.authenticate(cred);
+            } catch (err) {
+              callback(err);
+            }
+            callback();
+          }
+        });
+      }
+    });
+  }
 }

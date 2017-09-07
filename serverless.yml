@@ -1,4 +1,4 @@
-service: github-webhook
+service: ${env:BUILD_PROJECT}-github-webhook
 
 plugins:
   - serverless-step-functions
@@ -8,10 +8,10 @@ plugins:
 
 custom:
   parameters:
-    GithubUsername:
+    CodebuildProject:
       Type: String
-      Default: ${env:GITHUB_USERNAME}
-      Description: Github username, this is the user which will be displayed
+      Default: ${env:BUILD_PROJECT}
+      Description: Name of the build project that should be triggered
     GithubRepository:
       Type: String
       Default: ${env:GITHUB_REPOSITORY}
@@ -21,35 +21,49 @@ custom:
       Default: ${env:GITHUB_ACCESS_TOKEN}
       Description: Your generated github access token
       NoEcho: true
-    CodebuildProject:
+    SsmGithubUsername:
       Type: String
-      Default: ${env:BUILD_PROJECT}
-      Description: Name of the build project that should be triggered
+      Default: ${env:SSM_GITHUB_USERNAME}
+      Description: Encrypted SSM parameter name containing the Github username, this is the user which will be displayed
+    SsmGithubAccessToken:
+      Type: String
+      Default: ${env:SSM_GITHUB_ACCESS_TOKEN}
+      Description: Encrypted SSM parameter name containing the generated Github access token
 
 provider:
   name: aws
   runtime: nodejs6.10
   stage: trigger
-  region: eu-west-1
   versionFunctions: false
-  deploymentBucket: github-webhook-artifacts-${self:provider.region}
 
   # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
     - Effect: "Allow"
       Action:
         - codebuild:*
-      Resource: '*'
+      Resource: "arn:aws:codebuild:#{AWS::Region}:#{AWS::AccountId}:project/${env:BUILD_PROJECT}"
+    - Effect: "Allow"
+      Action:
+        - ssm:GetParameter
+      Resource:
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter${env:SSM_GITHUB_USERNAME}"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter${env:SSM_GITHUB_ACCESS_TOKEN}"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${env:SSM_GITHUB_USERNAME}"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${env:SSM_GITHUB_ACCESS_TOKEN}"
+    - Effect: "Allow"
+      Action:
+        - kms:Decrypt
+      Resource: "arn:aws:kms:#{AWS::Region}:#{AWS::AccountId}:key/${env:KMS_SSM_KEYID}"
 
   environment:
     BUILD_PROJECT:
       Ref: CodebuildProject
-    GITHUB_USERNAME:
-      Ref: GithubUsername
-    GITHUB_ACCESS_TOKEN:
-      Ref: GithubAccessToken
     GITHUB_REPOSITORY:
       Ref: GithubRepository
+    SSM_GITHUB_USERNAME:
+      Ref: SsmGithubUsername
+    SSM_GITHUB_ACCESS_TOKEN:
+      Ref: SsmGithubAccessToken
 
 functions:
   start-build:
@@ -79,7 +93,7 @@ resources:
             -
               - https://
               - Ref: "ApiGatewayRestApi"
-              - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+              - .execute-api.${opt:region, self:provider.region}.amazonaws.com/${opt:stage, self:provider.stage}/trigger-build/
 
   Outputs:
     TriggerEndpoint:
@@ -89,7 +103,7 @@ resources:
           -
             - https://
             - Ref: "ApiGatewayRestApi"
-            - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+            - .execute-api.${opt:region, self:provider.region}.amazonaws.com/${opt:stage, self:provider.stage}/trigger-build/
 
 stepFunctions:
   stateMachines:
