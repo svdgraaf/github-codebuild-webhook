@@ -31,7 +31,6 @@ provider:
   runtime: nodejs6.10
   stage: trigger
   versionFunctions: false
-  deploymentBucket: github-webhook-artifacts-${opt:region, self:provider.region}
 
   # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
