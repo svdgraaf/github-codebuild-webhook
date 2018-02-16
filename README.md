@@ -4,6 +4,10 @@ Github CodeBuild Webhook
 This project will setup an api gateway endpoint, which you can have your github repository connect to. This will start and update a commit with the current build status.
 This will be triggered for any PR update, on any branch.
 
+!WARNING!
+---------
+This repo is no longer maintained, codebuild nowadays has native Github integration, please use that.
+
 Installation
 ------------
 Use the steps below to launch the stack directly into your AWS account. You can setup as much stacks as you want, as the stack is currently connected to 1 CodeBuild project.
