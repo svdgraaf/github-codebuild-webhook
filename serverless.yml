@@ -1,4 +1,4 @@
-service: github-webhook
+service: ${env:BUILD_PROJECT}-github-webhook
 
 plugins:
   - serverless-step-functions
@@ -7,6 +7,7 @@ plugins:
   - serverless-pseudo-parameters
 
 custom:
+  githubStatusContext: codebuild-ci/pr
   parameters:
     GithubUsername:
       Type: String
@@ -21,6 +22,10 @@ custom:
       Default: ${env:GITHUB_ACCESS_TOKEN}
       Description: Your generated github access token
       NoEcho: true
+    GithubStatusContext:
+      Type: String
+      Default: ${env:GITHUB_STATUS_CONTEXT, self:custom.githubStatusContext}
+      Description: A label used to differentiate this status from other status integrations
     CodebuildProject:
       Type: String
       Default: ${env:BUILD_PROJECT}
@@ -30,16 +35,15 @@ provider:
   name: aws
   runtime: nodejs6.10
   stage: trigger
-  region: eu-west-1
   versionFunctions: false
-  deploymentBucket: github-webhook-artifacts-${self:provider.region}
+  memorySize: 128
 
   # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
     - Effect: "Allow"
       Action:
         - codebuild:*
-      Resource: '*'
+      Resource: "arn:aws:codebuild:#{AWS::Region}:#{AWS::AccountId}:project/${env:BUILD_PROJECT}"
 
   environment:
     BUILD_PROJECT:
@@ -50,6 +54,8 @@ provider:
       Ref: GithubAccessToken
     GITHUB_REPOSITORY:
       Ref: GithubRepository
+    GITHUB_STATUS_CONTEXT:
+      Ref: GithubStatusContext
 
 functions:
   start-build:
@@ -79,7 +85,7 @@ resources:
             -
               - https://
               - Ref: "ApiGatewayRestApi"
-              - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+              - .execute-api.#{AWS::Region}.amazonaws.com/${self:provider.stage}/trigger-build/
 
   Outputs:
     TriggerEndpoint:
@@ -89,7 +95,7 @@ resources:
           -
             - https://
             - Ref: "ApiGatewayRestApi"
-            - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+            - .execute-api.#{AWS::Region}.amazonaws.com/${self:provider.stage}/trigger-build/
 
 stepFunctions:
   stateMachines:
@@ -104,7 +110,7 @@ stepFunctions:
         States:
           start_build:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-start-build"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-start-build"
             Next: check_build_status
           wait_a_bit:
             Type: Wait
@@ -112,16 +118,20 @@ stepFunctions:
             Next: check_build_status
           check_build_status:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-check-build-status"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-check-build-status"
             Next: check_build_status_outcome
+            Retry:
+              - ErrorEquals: [ "States.TaskFailed" ]
+                IntervalSeconds: 3
+                MaxAttempts: 3
           check_build_status_outcome:
             Type: Choice
             Choices:
-            - Variable: "$.buildComplete"
+            - Variable: "$.build.buildComplete"
               BooleanEquals: true
               Next: build_done
             Default: wait_a_bit
           build_done:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-${opt:stage}-build-done"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-build-done"
             End: true

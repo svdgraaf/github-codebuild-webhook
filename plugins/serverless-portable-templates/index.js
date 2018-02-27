@@ -20,25 +20,6 @@ class ServerlessPortableTemplates {
     // remove the RoleName, so CloudFormation will generate one for us
     delete template['Resources']['IamRoleLambdaExecution']['Properties']['RoleName'];
 
-    _.each(template['Resources'], function(resource, name){
-
-      // remove the name for loggroups, so CF will generate a name for us (actually)
-      // those resources are not needed at all, but it's more work to remove them
-      if(resource['Type'] == 'AWS::Logs::LogGroup') {
-        delete resource['Properties']['LogGroupName']
-        template['Resources'][name] = resource
-        console.log('Portable templates: ' + chalk.yellow(name + ' removed LogGroupName'));
-      }
-
-      // replace the service name with the stack name so the functions will be unique
-      // per account
-      if(resource['Type'] == 'AWS::Lambda::Function') {
-        resource['Properties']['FunctionName'] = resource['Properties']['FunctionName'].replace(serviceName, "#{AWS::StackName}")
-        template['Resources'][name] = resource
-        console.log('Portable templates: ' + chalk.yellow(name + ' Added Pseudo Parameter for FunctionName'));
-      }
-
-    })
   }
 }
 
