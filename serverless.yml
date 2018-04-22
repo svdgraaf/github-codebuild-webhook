@@ -32,7 +32,7 @@ provider:
   stage: trigger
   region: eu-west-1
   versionFunctions: false
-  deploymentBucket: github-webhook-artifacts-${self:provider.region}
+  deploymentBucket: github-webhook-artifacts-${opt:region, self:provider.region}
 
   # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
@@ -79,7 +79,7 @@ resources:
             -
               - https://
               - Ref: "ApiGatewayRestApi"
-              - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+              - .execute-api.${opt:region, self:provider.region}.amazonaws.com/${opt:stage, self:provider.stage}/trigger-build/
 
   Outputs:
     TriggerEndpoint:
@@ -89,7 +89,7 @@ resources:
           -
             - https://
             - Ref: "ApiGatewayRestApi"
-            - .execute-api.eu-west-1.amazonaws.com/${self:provider.stage}/trigger-build/
+            - .execute-api.${opt:region, self:provider.region}.amazonaws.com/${opt:stage, self:provider.stage}/trigger-build/
 
 stepFunctions:
   stateMachines:
